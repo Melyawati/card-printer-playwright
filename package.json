@@ -1,0 +1,22 @@
+{
+  "name": "card-printer-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Melyawati/card-printer-playwright.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Melyawati/card-printer-playwright/issues"
+  },
+  "homepage": "https://github.com/Melyawati/card-printer-playwright#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.43.1",
+    "@types/node": "^20.12.7"
+  }
+}
