@@ -1,4 +1,4 @@
-import { test, expect, BrowserContext, Page, Locator } from '@playwright/test';
+import { test, expect, BrowserContext, type Page, Locator } from '@playwright/test';
 import assert from 'assert';
 import { chromium } from 'playwright';
 
@@ -17,20 +17,15 @@ const testCardPressoConfig = {
   defaultCardTemplate: 0
 }
 
+
 test.describe('Card Printer', () => {
-  test('Login to BioStar 2 and access Badge setting', async () => {
-    const browser: BrowserContext =  await chromium.launchPersistentContext('', {
-      channel: 'chrome',
-      headless: false,
-      ignoreHTTPSErrors: true
+    test.beforeEach(async ({ page }) => {
+        await page.goto('https://localhost/#/login');
+        await page.locator("//input[@ng-model='user.id']").fill(login.login_id);
+        await page.locator("//input[@ng-model='user.password']").fill(login.password);
+        await page.click('.btnLogin'); 
     });
-      
-    const page: Page = await browser.newPage();
-    await page.goto('https://localhost/#/login');
-    await page.locator("//input[@ng-model='user.id']").fill(login.login_id);
-    await page.locator("//input[@ng-model='user.password']").fill(login.password);
-      
-    await page.click('.btnLogin'); 
+  test('Login to BioStar 2 and access Badge setting', async ({ page }) => {
     await page.locator('button:has-text("Settings")').click();
     await page.waitForTimeout(5000);
     const isCardPrinterBtnPresent = await page.locator('li.cardPrinter a').isVisible();
@@ -81,16 +76,21 @@ test.describe('Card Printer', () => {
     expect(isApplyButtonPresent, 'apply btn should present').toBeTruthy();
     expect(isCancelButtonPresent, 'cancel btn should present').toBeTruthy();
     await page.waitForTimeout(5000);
-
-    // test('Login to BioStar 2 and access Badge setting', async () => {
-    //   await page.locator('button:has-text("Settings")').click();
-    //   await page.waitForTimeout(5000);
-    // });  
+ 
   });
-//   test('Login to BioStar 2 and access Badge setting', async (page) => {
-//     await page.locator('button:has-text("Settings")').click();
-//     await page.waitForTimeout(5000);
-//   });  
+  test('Verify Print Card button', async ({ page }) => {
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+    let isBtnPrintCardHasNgHideClass = await page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass, "btn print card should not found").toBeFalsy();
+    await page.locator('[ng-click="cancelAddUser()"].btnBack').click();
+    await page.locator('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)').click();
+    let isBtnPrintCardHasNgHideClass2nd = await page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass2nd, "btn print card should not found").toBeFalsy();
+
+    await page.waitForTimeout(5000);
+  });  
+
   
 })
 
