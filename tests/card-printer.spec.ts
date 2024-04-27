@@ -279,6 +279,20 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
     page.locator('[ng-click="doApplyCardPressoSetting();"]').click();
 
     await page.waitForTimeout(5000);
+  }); 
+  test('4. Verify Print Card button', async ({ page }) => {
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+    let isBtnPrintCardHasNgHideClass = await page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass, "btn print card should found").toBeFalsy();
+    
+    page.locator('[ng-click="cancelAddUser()"].btnBack').click();
+    await page.click('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)');
+
+    let isBtnPrintCardHasNgHideClass2nd = await page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass2nd, "btn print card should found").toBeFalsy();
+
+    await page.waitForTimeout(5000);
   });  
 
   
