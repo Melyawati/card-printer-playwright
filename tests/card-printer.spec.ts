@@ -293,11 +293,59 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
     expect(isBtnPrintCardHasNgHideClass2nd, "btn print card should found").toBeFalsy();
 
     await page.waitForTimeout(5000);
+  }); 
+  test('5. Print Card on an empty New User page', async ({ page }) => {
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+    let isBtnPrintCardHasNgHideClass = await page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass, "btn print card should found").toBeFalsy();
+                
+    page.locator('label[for="btnPrintCard"]').click();
+    const checkPrintCardPopup = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+    expect(checkPrintCardPopup, 'Fail : Pop up is not showing up').toBeTruthy();
+
+    page.locator("//div[@ng-model='print.selectedCard']").click();
+    await page.click('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_0');
+    await page.waitForTimeout(5000);
+    let isPrintBtnPresent = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+    let isCancelButtonPresent = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+    expect(isPrintBtnPresent, 'btn print should be present').toBeTruthy();
+    expect(isCancelButtonPresent, 'btn cancel print should be present').toBeTruthy();
+
+    page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+
+    page.locator('label[for="btnPrintCard"]').click();
+    let checkPrintCardPopup2nd = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+    expect(checkPrintCardPopup2nd, 'Fail : Pop up is not showing up').toBeTruthy();
+    page.locator("//div[@ng-model='print.selectedCard']").click();
+    await page.click('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_0');
+    let isPrintBtnPresent2nd = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+    let isCancelButtonPresent2nd = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+
+    expect(isPrintBtnPresent2nd, 'btn print should be present').toBeTruthy();
+    expect(isCancelButtonPresent2nd, 'btn cancel print should be present').toBeTruthy();
+
+    page.locator('#printCardDlg [ng-click="doPrint()"]').click();
+    let isNoticeOkPresent = page.locator('.popFooter > .btnC > .okButton').isVisible();
+    let isNoticeCancelPresent = page.locator('#dialogBtnCancel').isVisible();
+    expect(isNoticeOkPresent, 'button ok should be present').toBeTruthy();
+    expect(isNoticeCancelPresent, 'button cancel should be present').toBeTruthy();
+  
+    page.locator('[ng-click="doCancelPrintCard()"]').click();
+    page.locator('#printCardDlg [ng-click="doPrint()"]').click();
+    let isNoticeOkPresent2nd = page.locator('.popFooter > .btnC > .okButton').isVisible();
+    let isNoticeCancelPresent2nd = page.locator('#dialogBtnCancel').isVisible();
+    expect(isNoticeOkPresent2nd, 'button ok should be present').toBeTruthy();
+    expect(isNoticeCancelPresent2nd, 'button cancel should be present').toBeTruthy();
+
+    page.locator('#dialogBtnCancel').click();
+    page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+
+    await page.waitForTimeout(5000);
   });  
 
+}); 
   
-})
-
 // test('get started link', async () => {
 //   // const browser = await puppeteer.launch({ ignoreHTTPSErrors: true });
 //   const browser: BrowserContext =  await chromium.launchPersistentContext('', {
