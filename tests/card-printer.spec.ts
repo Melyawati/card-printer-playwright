@@ -17,6 +17,17 @@ const testCardPressoConfig = {
   defaultCardTemplate: 0
 }
 
+const deleteCustomFieldMessage = {
+  en: 'Deleting. Continue?',
+  ko: '선택된 항목을 목록에서 삭제합니다. \n계속하시겠습니까?'
+}
+
+async function checkPopupMsg(koMsg: string, enMsg: string, option: string) {
+  console.log(`Checking popup message - KO: ${koMsg}, EN: ${enMsg}, Option: ${option}`);
+}
+
+let newUserBSB006: string | undefined = undefined;
+
 async function assertTextMatch(page, selector, expectedValue) {
     const element = await page.$(selector);
     if (!element)
@@ -343,6 +354,128 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
 
     await page.waitForTimeout(5000);
   });  
+  test('6. Print Card on a filled New User page', async ({ page }) => {
+    await page.locator('button:has-text("Settings")').click();
+    await page.locator('li.server a:has-text("Server")').click();
+    // add some new custom user field
+    let newCustomUserField = {
+        field1: {
+            type: 'Text Input Box',
+            name: 'occupation'
+        },
+        field2: {
+            type: 'Number Input Box',
+            name: 'grade'
+        },
+        field3: {
+            type: 'Combo Box',
+            name: 'color',
+            data: 'red;blue;white;'
+        }
+    };
+    
+    // remove rows
+    const rows = await page.$$('#customFieldSetTable tbody tr');
+
+    // Iterate over each row
+    for (const row of rows) {
+        // Check if the delete button exists in the row
+        const btnDeleteExist = await row.$('.ibtnDelete');
+
+        // If delete button exists, click on it and check the popup message
+        if (btnDeleteExist) {
+            await btnDeleteExist.click();
+            await checkPopupMsg(deleteCustomFieldMessage.ko, deleteCustomFieldMessage.en, 'Yes');
+        }
+    }
+
+    page.click('[ng-click="doAddCustomField()"]');
+
+    page.locator('#customFieldSetTable tr:nth-child(1) .customFieldName > input').fill(newCustomUserField.field1.name);
+    page.click('#customFieldSetTable tr:nth-child(1) .customFieldType > [ng-model="item.type"]');
+    page.click('#customFieldSetTable tr:nth-child(1) .customFieldType > [ng-model="item.type"] > .scroll > .selectList > li:nth-child(1)');
+
+    await page.waitForTimeout(5000);
+    page.click('[ng-click="doAddCustomField()"]');
+    page.locator('#customFieldSetTable > tbody > tr:nth-child(2) .customFieldName > input').fill(newCustomUserField.field2.name);
+    page.click('#customFieldSetTable > tbody > tr:nth-child(2) .customFieldType > [ng-model="item.type"]');
+    page.click('#customFieldSetTable > tbody > tr:nth-child(2) .customFieldType > [ng-model="item.type"] > .scroll > .selectList > li:nth-child(2)');
+  
+    await page.waitForTimeout(5000);
+    page.click('[ng-click="doAddCustomField()"]');
+    page.locator('#customFieldSetTable > tbody > tr:nth-child(3) .customFieldName > input').fill(newCustomUserField.field3.name);
+    page.click('#customFieldSetTable > tbody > tr:nth-child(3) .customFieldType > [ng-model="item.type"]');
+    page.click('#customFieldSetTable > tbody > tr:nth-child(3) .customFieldType > [ng-model="item.type"] > .scroll > .selectList > li:nth-child(3)');
+    page.locator('#customFieldSetTable > tbody > tr:nth-child(3) .customFieldData > [ng-model="item.data"]').fill(newCustomUserField.field3.data);
+    await page.waitForTimeout(3000);
+    page.click('[ng-click="doApply()"]');
+    await page.waitForTimeout(3000);
+
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+    // fill in user info
+    let newUser = {
+        name: 'Indra',
+        email: 'indra@suprema.co.kr',
+        department:'Dev',
+        telephone: '123',
+        customFieldInputBox: 'Inputbox',
+        customFieldNumber: '456'
+    };
+    page.locator("//input[@ng-model='user.name']").fill(newUser.name);
+    await page.waitForTimeout(2000);
+    page.locator("//input[@ng-model='user.email']").fill(newUser.email);
+    await page.waitForTimeout(2000);
+    page.locator("//input[@ng-model='user.department']").fill(newUser.department);
+    await page.waitForTimeout(2000);
+    page.locator("//input[@ng-model='user.phone']").fill(newUser.telephone);
+    await page.waitForTimeout(2000);
+    page.locator("//input[@name='customField0']").fill(newUser.customFieldInputBox);
+    await page.waitForTimeout(1000);
+    page.locator("//input[@name='customField1']").fill(newUser.customFieldNumber);
+    await page.waitForTimeout(1000);
+    page.click('[ng-if="item.custom_field.type == USER_CUSTOM_FIELD_TYPE.SELECT"]');
+    await page.waitForTimeout(2000);
+    page.locator('[ng-if="item.custom_field.type == USER_CUSTOM_FIELD_TYPE.SELECT"] div.scrollY > ul.selectList  > li:nth-child(2)').click();
+    await page.waitForTimeout(2000);
+    page.click('label[for="btnPrintCard"]');
+    let checkPrintCardPopup = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+    expect(checkPrintCardPopup, 'Fail : Pop up is not showing up').toBeTruthy();
+
+    page.locator("//div[@ng-model='print.selectedCard']").click();
+    await page.click('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_0');
+    let isPrintBtnPresent = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+    let isCancelButtonPresent = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+
+    expect(isPrintBtnPresent, 'btn print should be present').toBeTruthy();
+    expect(isCancelButtonPresent, 'btn cancel print should be present').toBeTruthy();
+
+    page.locator('#printCardDlg [ng-click="doPrint()"]').click();
+    await page.waitForTimeout(5000);
+    let isNoticeOkPresent = page.locator('.popFooter > .btnC > .okButton').isVisible();
+    let isNoticeCancelPresent = page.locator('#dialogBtnCancel').isVisible();
+    expect(isNoticeOkPresent, 'button ok should be present').toBeTruthy();
+    expect(isNoticeCancelPresent, 'button cancel should be present').toBeTruthy();
+
+    page.locator('#dialogBtnCancel').click();
+    await page.waitForTimeout(2000);
+    page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+    await page.waitForTimeout(2000);
+    const inputElement = await page.$('input[ng-model="user.user_id"]');
+
+    if (!inputElement) {
+        console.error('Input element not found');
+        return;
+    }
+
+    newUserBSB006 = await inputElement.evaluate((element: HTMLElement) => {
+      // Return the value of the attribute or undefined if it's null
+      return (element as HTMLInputElement)?.value || undefined;
+  });
+    page.locator('[ng-click="addUser()"]').click();
+
+    await page.waitForTimeout(5000);
+  }); 
 
 }); 
   
