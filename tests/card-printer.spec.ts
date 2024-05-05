@@ -1,5 +1,6 @@
-import { test, expect, BrowserContext, type Page, Locator } from '@playwright/test';
+import { test, expect, BrowserContext, type Page, Locator, ElementHandle } from '@playwright/test';
 import assert from 'assert';
+import exp from 'constants';
 import { chromium } from 'playwright';
 
 const login = {
@@ -477,7 +478,76 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
     await page.waitForTimeout(5000);
   }); 
 
+  test('7. Print Card on existing User', async ({ page }) => {
+    await page.locator('button:has-text("USER")').click();
+    // let isUserSearchExist = await page.locator('#boardSearchInput').isVisible();
+   
+      await page.fill('#boardSearchInput', 'Indra');
+  
+      // Click the search button
+      await page.click('[ng-click="doSearchBoard()"].btnText');
+      await page.locator('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)').click();
+  
+      page.locator('label[for="btnPrintCard"]').click();
+      let checkPrintCardPopup = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+      expect(checkPrintCardPopup, 'Fail : Pop up is not showing up').toBeTruthy();
+      
+      page.locator("//div[@ng-model='print.selectedCard']").click();
+      await page.waitForTimeout(5000);
+      let isDefaultCardSelected = page.locator('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_0').click();
+      let isPrintBtnPresent = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+      let isCancelButtonPresent = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+      
+      expect(isDefaultCardSelected, 'default card should be selected').toBeTruthy();
+      expect(isPrintBtnPresent, 'btn print should be present').toBeTruthy();
+      expect(isCancelButtonPresent, 'btn cancel print should be present').toBeTruthy();
+      
+      page.locator('#printCardDlg [ng-click="doPrint()"]').click();
+      await page.waitForTimeout(5000);
+      let isNoticeOkPresent = page.locator('.popFooter > .btnC > .okButton').isVisible();
+      let isNoticeCancelPresent = page.locator('#dialogBtnCancel').isVisible();
+      expect(isNoticeOkPresent, 'button ok should be present').toBeTruthy();
+      expect(isNoticeCancelPresent, 'button cancel should be present').toBeTruthy();
+      
+      page.locator('#dialogBtnCancel').click();
+      page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click()
+  
+    await page.locator('button:has-text("USER")').click();
+        await page.fill('#boardSearchInput', 'Indra');
+        await page.click('[ng-click="doSearchBoard()"].btnText');
+        await page.locator('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)').click();
+  
+        await page.click('label[for="btnPrintCard"]');
+        await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+  
+        page.locator("//div[@ng-model='print.selectedCard']").click();
+        await page.waitForTimeout(5000);
+        let isDefaultCardSelected2nd = page.locator('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_0').click();
+        let isPrintBtnPresent2nd = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+        let isCancelButtonPresent2nd = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+  
+        expect(isDefaultCardSelected2nd, 'default card should be selected').toBeTruthy();
+        expect(isPrintBtnPresent2nd, 'btn print should be present').toBeTruthy();
+        expect(isCancelButtonPresent2nd, 'btn cancel print should be present').toBeTruthy();
+  
+        page.locator("//div[@ng-model='print.selectedCard']").click();
+        await page.waitForTimeout(5000);
+        page.locator('#printCardDlg .cardTemplate .scroll > .selectList > li:nth-child(2)').click();
+        page.locator('#printCardDlg [ng-click="doPrint()"]').click();
+        await page.waitForTimeout(5000);
+        let isNoticeOkPresent2nd = await page.$('.popFooter > .btnC > .okButton');
+        let isNoticeCancelPresent2nd = await page.$('#dialogBtnCancel');
+  
+        expect(isNoticeOkPresent2nd, 'button ok should be present').toBeTruthy();
+        expect(isNoticeCancelPresent2nd, 'button cancel should be present').toBeTruthy();
+        page.locator('#dialogBtnCancel').click();
+        page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+        page.locator('[ng-click="addUser()"]').click();
+    await page.waitForTimeout(5000);
+  }); 
+
 }); 
+
   
 // test('get started link', async () => {
 //   // const browser = await puppeteer.launch({ ignoreHTTPSErrors: true });
