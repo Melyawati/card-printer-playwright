@@ -724,6 +724,32 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
     expect(isCancelButtonPresent2nd, 'btn cancel print should be present').toBeTruthy();
     page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
     await page.waitForTimeout(5000);
+  });
+  test('10. Verify Print Card button not available after CardPresso setting is changed', async ({ page }) => {
+    await page.locator('button:has-text("Settings")').click();
+    await page.waitForTimeout(5000);
+    const isCardPrinterBtnPresent = await page.locator('li.cardPrinter a').isVisible();
+    expect(isCardPrinterBtnPresent, 'Card printer button should be available').toBeTruthy();                
+    await page.locator('li.cardPrinter a:has-text("Card Printer")').click();
+    await page.waitForTimeout(5000);
+
+    await page.click('.ngbssToggleCheckBox .switch');
+    await page.waitForTimeout(5000);
+    let isCheckboxSelected = await page.locator('checkBoxValue').isVisible();
+    expect(isCheckboxSelected, 'toggle should not be use').toBeFalsy();
+    page.locator('[ng-click="doApplyCardPressoSetting();"]').click();
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+
+    let isBtnPrintCardHasNgHideClass = page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass, "btn print card should not found").toBeTruthy();
+                
+    page.locator('[ng-click="cancelAddUser()"].btnBack').click();
+    page.locator('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)').click();
+
+    let isBtnPrintCardHasNgHideClass2nd = page.locator('p[ng-show="isSetCardPressoSetting"].ng-hide').isVisible();
+    expect(isBtnPrintCardHasNgHideClass2nd, "btn print card should not found").toBeTruthy();
+    await page.waitForTimeout(5000);
   })
 
 }); 
