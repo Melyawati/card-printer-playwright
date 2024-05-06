@@ -656,6 +656,74 @@ const listComboData = await Promise.all(listComboElements.map(async (row) => {
     page.locator('[ng-click="addUser()"]').click();
     page.locator('[ng-label="button.ok"]').click();
     await page.waitForTimeout(5000);          
+  });
+  test('9. Verify default template changed on Add and Edit User page after changing default template', async ({ page }) => {
+    const cardTemplatesTr = '#cardTemplateTable tbody tr';
+
+    await page.locator('button:has-text("Settings")').click();
+    await page.waitForTimeout(5000);
+    const isCardPrinterBtnPresent = await page.locator('li.cardPrinter a').isVisible();
+    expect(isCardPrinterBtnPresent, 'Card printer button should be available').toBeTruthy();                
+    await page.locator('li.cardPrinter a:has-text("Card Printer")').click();
+    await page.waitForTimeout(5000);
+    let isTemplateChecked: boolean | undefined;
+    const elements = await page.$$(cardTemplatesTr);
+
+    for (let index = 0; index < elements.length; index++) {
+        if (index === 1) {
+            const elem = await elements[index].$('input[type="radio"]');
+            const elemLabel = await elements[index].$('label');
+
+            if (elemLabel) {
+              await elemLabel.click();
+              isTemplateChecked = await elem?.isChecked();
+              expect(isTemplateChecked).toBe(true);
+            } else {
+                console.error('Label element not found.');
+            }
+            break;
+        }
+    }
+    await page.waitForTimeout(5000);
+    page.locator('[ng-click="doApplyCardPressoSetting();"]').click();
+    await page.locator('button:has-text("USER")').click();
+    await page.locator('button:has-text("ADD USER")').click();
+
+
+    page.locator('label[for="btnPrintCard"]').click();
+    let checkPrintCardPopup = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+    expect(checkPrintCardPopup, 'Fail : Pop up is not showing up').toBeTruthy();
+
+    page.locator("//div[@ng-model='print.selectedCard']").click();
+    await page.waitForTimeout(5000);
+    let isDefaultCardSelected = page.locator('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_1').click();
+    let isPrintBtnPresent = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+    let isCancelButtonPresent = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+      
+    expect(isDefaultCardSelected, 'default card should be selected').toBeTruthy();
+    expect(isPrintBtnPresent, 'btn print should be present').toBeTruthy();
+    expect(isCancelButtonPresent, 'btn cancel print should be present').toBeTruthy();
+
+    page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+    await page.waitForTimeout(5000);
+    page.locator('[ng-click="cancelAddUser()"].btnBack').click();
+    page.locator('article.datagridTypeA .datagrid-btable > tbody > tr:nth-child(1)').click();
+
+    page.locator('label[for="btnPrintCard"]').click();
+    let checkPrintCardPopup2nd = await page.waitForSelector('.popCnt', { state: 'visible', timeout: 3000 });
+    expect(checkPrintCardPopup2nd, 'Fail : Pop up is not showing up').toBeTruthy();
+
+    page.locator("//div[@ng-model='print.selectedCard']").click();
+    let isDefaultCardSelected2nd = page.locator('#printCardDlg .cardTemplate .scroll > .selectList > li.item.item_1').click();
+    await page.waitForTimeout(5000);
+    let isPrintBtnPresent2nd = page.locator('#printCardDlg [ng-click="doPrint()"]').isVisible();
+    let isCancelButtonPresent2nd = page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').isVisible();
+      
+    expect(isDefaultCardSelected2nd, 'default card should be selected').toBeTruthy();
+    expect(isPrintBtnPresent2nd, 'btn print should be present').toBeTruthy();
+    expect(isCancelButtonPresent2nd, 'btn cancel print should be present').toBeTruthy();
+    page.locator('#printCardDlg [ng-click="doCancelPrintCard()"]').click();
+    await page.waitForTimeout(5000);
   })
 
 }); 
